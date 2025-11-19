@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tool-hub"
+version = "0.1.1"
+description = "A Hub & Spoke tool selection engine for MCP toolkits"
+readme = "README.md"
+authors = [
+    { name = "Akshay Sharma", email = "akshay@getseer.dev" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "openai>=2.8.1",
+    "faiss-cpu>=1.13.0",
+    "numpy>=2.3.5",
+    "pydantic>=2.12.4",
+    "composio>=0.9.2",
+    "python-dotenv>=1.2.1",
+    "tqdm>=4.0.0"
+]
+
+[tool.setuptools]
+packages = ["tool_hub"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "python-dotenv",
+    "black",
+    "isort"
+]
