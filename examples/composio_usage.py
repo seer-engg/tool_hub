@@ -45,10 +45,10 @@ def main():
         hub.save(index_dir)
     
     # Query
-    query = "assign a task for user onboarding to John Doe and create a new issue in github"
+    query = "assign a task for user onboarding to John Doe in Asana and create a new issue in github"
     print(f"\nQuery: '{query}'")
     
-    selected_tools = hub.query(query)
+    selected_tools = hub.query(query, top_k=5)
     
     print(f"\nSelected {len(selected_tools)} tools:")
     for tool in selected_tools:
