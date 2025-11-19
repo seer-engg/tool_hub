@@ -1,40 +1,56 @@
-# Tool Hub Prototype
+# Tool Hub 🎯
 
-A "Hub & Spoke" tool selection engine for MCP toolkits.
+A "Hub & Spoke" tool selection engine for AI agents. It combines semantic search with graph-based expansion to intelligently select the right tools for the job—including dependencies you didn't know you needed.
 
-## Setup
+## Features
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- **🧠 Smart Ingestion**: Enriches tool definitions with "use cases", "dependencies", and "likely neighbors" using GPT-4.
+- **🔍 Hybrid Retrieval**:
+  - **Hub**: Vector search finds the most semantically relevant tools.
+  - **Spoke**: Graph traversal pulls in required dependencies (e.g., `delete_file` automatically pulls `list_files`).
+- **⚡ Fast**: Uses FAISS for high-performance vector similarity search.
 
-2. Set environment variables:
-   Export `OPENAI_API_KEY` and optionally `COMPOSIO_API_KEY`.
-   ```bash
-   export OPENAI_API_KEY=sk-...
-   export COMPOSIO_API_KEY=...
-   ```
+## Installation
 
-## Usage
+```bash
+pip install -e .
+```
 
-1. **Ingestion (One-time setup)**
-   Fetches tools (mock or real), generates metadata using GPT-4, and builds the vector index.
-   ```bash
-   python ingestion.py
-   ```
-   *Outputs: `tools.index`, `tools_metadata.json`*
+## Quick Start
 
-2. **Run Simulation**
-   Runs a query through the retriever and simulates the LLM tool selection.
-   ```bash
-   python main.py
-   ```
+```python
+import os
+from tool_hub import ToolHub
 
-## Architecture
+# 1. Initialize
+hub = ToolHub(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
-- **Ingestion**: Enriches raw tool definitions with "Use Cases", "Dependencies", and "Likely Neighbors" using an LLM.
-- **Retrieval**:
-  1. **Hub**: Vector search to find top semantic matches.
-  2. **Spoke**: Graph traversal to pull in required dependencies (e.g., `delete_object` pulls in `list_objects`).
+# 2. Ingest your tools (OpenAI format)
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "create_ticket",
+            "description": "Create a new support ticket",
+            "parameters": {...}
+        }
+    },
+    # ... more tools
+]
+hub.ingest(tools)
 
+# 3. Query
+query = "I need to file a bug report"
+selected_tools = hub.query(query)
+
+print(f"Selected {len(selected_tools)} tools")
+```
+
+## How it Works
+
+1. **Ingest**: The `ingest()` method processes your raw tool definitions. It uses an LLM to "dream up" metadata:
+   - *Use Cases*: specific user intents this tool satisfies.
+   - *Dependencies*: other tools required before this one can run.
+   - *Neighbors*: tools often used in sequence.
+
+2. **Retrieve**: The `query()` method first performs a vector search to find the best "anchor" tools. Then, it looks at the enriched metadata to pull in any "spoke" tools (dependencies and neighbors) to ensure the agent has a complete toolkit.
