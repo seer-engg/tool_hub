@@ -89,6 +89,44 @@ class ToolHub:
         self.tool_map = {t.name: t for t in enriched_tools}
         print("Ingestion complete.")
 
+    def save(self, directory: str):
+        """Saves the index and metadata to disk."""
+        if not self.index:
+            raise RuntimeError("No index to save. Run ingest() first.")
+            
+        os.makedirs(directory, exist_ok=True)
+        
+        # 1. Save FAISS index
+        index_path = os.path.join(directory, "tools.index")
+        faiss.write_index(self.index, index_path)
+        
+        # 2. Save Metadata
+        metadata_path = os.path.join(directory, "metadata.json")
+        data = [t.model_dump() for t in self.metadata]
+        with open(metadata_path, "w") as f:
+            json.dump(data, f, indent=2)
+            
+        print(f"Index and metadata saved to {directory}")
+
+    def load(self, directory: str):
+        """Loads the index and metadata from disk."""
+        index_path = os.path.join(directory, "tools.index")
+        metadata_path = os.path.join(directory, "metadata.json")
+        
+        if not os.path.exists(index_path) or not os.path.exists(metadata_path):
+            raise FileNotFoundError(f"Index or metadata not found in {directory}")
+            
+        # 1. Load FAISS index
+        self.index = faiss.read_index(index_path)
+        
+        # 2. Load Metadata
+        with open(metadata_path, "r") as f:
+            data = json.load(f)
+            self.metadata = [EnrichedTool(**item) for item in data]
+            
+        self.tool_map = {t.name: t for t in self.metadata}
+        print(f"Loaded {len(self.metadata)} tools from {directory}")
+
     def query(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """
         Retrieves tools using the 'Hub & Spoke' method.

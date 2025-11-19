@@ -19,27 +19,33 @@ def main():
         print("Skipping Composio example: COMPOSIO_API_KEY not set.")
         return
 
-    print("Fetching GitHub tools from Composio...")
-    
-    composio_client = Composio(api_key=composio_key)
-    
-    try:
-        # Fetch tools for GitHub
-        # The SDK returns a list of tool definitions directly usable by OpenAI
-        tools = composio_client.tools.get(user_id=user_id, toolkits=["GITHUB"], limit=1000)
-    except Exception as e:
-        print(f"Error fetching tools: {e}")
-        return
-
     # Initialize Hub
     hub = ToolHub(openai_api_key=openai_key)
-    
-    # Ingest
-    # We pass the raw tools list directly; ToolHub handles normalization
-    hub.ingest(tools)
+    index_dir = "github_tool_index"
+
+    if os.path.exists(index_dir):
+        print("Loading cached index...")
+        hub.load(index_dir)
+    else:
+        print("Fetching GitHub tools from Composio...")
+        
+        composio_client = Composio(api_key=composio_key)
+        
+        try:
+            # Fetch tools for GitHub
+            # The SDK returns a list of tool definitions directly usable by OpenAI
+            tools = composio_client.tools.get(user_id=user_id, toolkits=["GITHUB", "ASANA"], limit=1500)
+        except Exception as e:
+            print(f"Error fetching tools: {e}")
+            return
+        
+        # Ingest
+        # We pass the raw tools list directly; ToolHub handles normalization
+        hub.ingest(tools)
+        hub.save(index_dir)
     
     # Query
-    query = "Create a new issue about a bug in the login page"
+    query = "assign a task for user onboarding to John Doe and create a new issue in github"
     print(f"\nQuery: '{query}'")
     
     selected_tools = hub.query(query)
