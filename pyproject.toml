@@ -31,3 +31,9 @@ dev = [
     "black",
     "isort"
 ]
+
+[project.urls]
+Homepage = "https://github.com/seer-engg/tool-hub"
+Documentation = "https://github.com/seer-engg/tool-hub#readme"
+Repository = "https://github.com/seer-engg/tool-hub"
+Issues = "https://github.com/seer-engg/tool-hub/issues"
