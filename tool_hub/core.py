@@ -219,8 +219,12 @@ class ToolHub:
 
     def _get_embedding(self, text: str) -> np.ndarray:
         """Generates embeddings using OpenAI."""
+        # Replace newlines with spaces to handle multi-line inputs properly, 
+        # as per OpenAI recommendation for embeddings
+        cleaned_text = text.replace("\n", " ")
+        
         response = self.client.embeddings.create(
-            input=text,
+            input=cleaned_text,
             model=self.embedding_model
         )
         return np.array([response.data[0].embedding]).astype('float32')
