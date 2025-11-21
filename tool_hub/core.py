@@ -174,8 +174,8 @@ class ToolHub:
 
         final_selection = results + expanded_results
         
-        # Convert back to OpenAI dict format
-        return [t.original_tool.model_dump(exclude={'executable'}) for t in final_selection]
+        # Return a list of EnrichedTool dictionaries (including parameters)
+        return [t.model_dump(include={'name', 'description', 'parameters'}) for t in final_selection]
 
     def get_tool(self, name: str) -> Optional[Any]:
         """Retrieves the executable tool by name."""
