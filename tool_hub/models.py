@@ -11,6 +11,7 @@ class Tool(BaseModel):
     """Represents a tool input (compatible with OpenAI tool schema)."""
     type: str = "function"
     function: ToolFunction
+    executable: Optional[Any] = Field(default=None, exclude=True, description="The executable callable/tool object")
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Tool":
@@ -21,6 +22,9 @@ class Tool(BaseModel):
         else:
             # Assume it's the function definition directly (common in some frameworks)
             return cls(function=ToolFunction(**data))
+    
+    class Config:
+        arbitrary_types_allowed = True
 
 class EnrichedTool(BaseModel):
     """Internal representation with enriched metadata."""
@@ -33,4 +37,6 @@ class EnrichedTool(BaseModel):
     required_entities: List[str] = Field(description="Abstract entities required to use this tool")
     embedding_text: str = Field(description="Text used for vector embedding")
     original_tool: Tool = Field(description="The original tool object")
-
+    
+    def get_executable(self) -> Optional[Any]:
+        return self.original_tool.executable

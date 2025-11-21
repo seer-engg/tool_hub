@@ -175,7 +175,14 @@ class ToolHub:
         final_selection = results + expanded_results
         
         # Convert back to OpenAI dict format
-        return [t.original_tool.model_dump() for t in final_selection]
+        return [t.original_tool.model_dump(exclude={'executable'}) for t in final_selection]
+
+    def get_tool(self, name: str) -> Optional[Any]:
+        """Retrieves the executable tool by name."""
+        enriched = self.tool_map.get(name)
+        if enriched:
+            return enriched.get_executable()
+        return None
 
     def _enrich_tool_metadata(self, tool: Tool) -> EnrichedTool:
         """Uses LLM to generate rich metadata."""
