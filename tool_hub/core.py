@@ -183,6 +183,27 @@ class ToolHub:
         if enriched:
             return enriched.get_executable()
         return None
+    
+    def bind_executables(self, tools: List[Any]):
+        """
+        Binds executable functions from a list of tools to the loaded metadata.
+        This is required after loading from disk, as functions aren't serialized.
+        """
+        count = 0
+        # tools is a list of BaseTool (LangChain) or similar which have a .name attribute
+        # We need to match them to our metadata
+        
+        # First, create a map of executable tools for faster lookup
+        executable_map = {t.name: t for t in tools}
+        
+        for tool_name, enriched_tool in self.tool_map.items():
+            if tool_name in executable_map:
+                # The tool hub model (Tool) expects 'executable' field to be the callable/tool object
+                if enriched_tool.original_tool:
+                    enriched_tool.original_tool.executable = executable_map[tool_name]
+                    count += 1
+        
+        print(f"Bound {count} executable functions to ToolHub.")
 
     def _enrich_tool_metadata(self, tool: Tool) -> EnrichedTool:
         """Uses LLM to generate rich metadata."""
