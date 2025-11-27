@@ -12,7 +12,7 @@ class ToolHub:
     def __init__(
         self, 
         openai_api_key: str, 
-        llm_model: str = "gpt-4.1", 
+        llm_model: str = "gpt-5.1", 
         embedding_model: str = "text-embedding-3-small"
     ):
         """
@@ -20,7 +20,7 @@ class ToolHub:
 
         Args:
             openai_api_key: The OpenAI API key (required).
-            llm_model: The model used for enrichment (default: gpt-4.1).
+            llm_model: The model used for enrichment (default: gpt-5.1).
             embedding_model: The model used for vector embedding (default: text-embedding-3-small).
         """
         if not openai_api_key:
