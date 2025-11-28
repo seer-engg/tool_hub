@@ -52,7 +52,7 @@ def main():
     
     print(f"\nSelected {len(selected_tools)} tools:")
     for tool in selected_tools:
-        print(f"- {tool['function']['name']}")
+        print(f"- {tool['name']}")
 
 if __name__ == "__main__":
     main()
