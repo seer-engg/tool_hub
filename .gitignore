@@ -41,3 +41,6 @@ tools.index
 tools_metadata.json
 
 github_tool_index/
+
+.index/
+**/experiment_results.csv
