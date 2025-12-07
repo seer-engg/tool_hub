@@ -6,43 +6,40 @@ A "Hub & Spoke" tool selection engine for AI agents. Combines semantic search wi
 
 - **🧠 Smart Ingestion**: Enriches tools with LLM-generated metadata (use cases, dependencies, neighbors)
 - **🔍 Hybrid Retrieval**: Vector search (Hub) + graph expansion (Spoke) for complete toolkits
-- **⚡ Fast**: Supports FAISS (local) and Pinecone (cloud) vector stores
-- **☁️ Pinecone Support**: Query existing Pinecone indexes with thousands of pre-computed tools
+- **☁️ Pinecone Backend**: Cloud-native vector store with namespace isolation for integrations
+- **⚡ Async-First**: Fully async API for high-performance tool queries
 
 ## Installation
 
 ```bash
 pip install -e .
-pip install -e ".[dev]"  # For Pinecone support
+pip install -e ".[dev]"  # For development dependencies
 ```
 
 ## Quick Start
 
-### FAISS Mode (Local)
-
 ```python
+import os
 from tool_hub import ToolHub
 
-hub = ToolHub(openai_api_key="...", pinecone_index_name="", pinecone_api_key="")
-hub.ingest(tools)  # Your OpenAI-format tools
-results = hub.query("I need to file a bug report")
-```
-
-### Pinecone Mode (Production)
-
-```python
-from tool_hub import ToolHub
-
+# Initialize ToolHub
 hub = ToolHub(
     openai_api_key=os.getenv("OPENAI_API_KEY"),
     pinecone_index_name=os.getenv("PINECONE_INDEX_NAME"),
     pinecone_api_key=os.getenv("PINECONE_API_KEY")
 )
 
-# Query existing index (no ingestion needed)
-results = await hub.query_pinecone(
+# Ingest tools (one-time, per integration)
+await hub.ingest(
+    tools=tools,  # List of OpenAI-format tools
+    integration_name="github",  # Namespace for this integration
+    max_workers=10
+)
+
+# Query tools
+results = await hub.query(
     query="list GitHub repositories",
-    integration_name="github",  # Optional filter
+    integration_name=["github"],  # Optional: filter by integration(s)
     top_k=5
 )
 ```
@@ -51,16 +48,20 @@ results = await hub.query_pinecone(
 
 **Initialization:**
 ```python
-ToolHub(openai_api_key, pinecone_index_name, pinecone_api_key, 
-        llm_model="gpt-5-mini", embedding_model="text-embedding-3-small")
+ToolHub(
+    openai_api_key: str,           # Required
+    pinecone_index_name: str,      # Required
+    pinecone_api_key: str,         # Required
+    llm_model: str = "gpt-5-mini",
+    embedding_model: str = "text-embedding-3-small",
+    embedding_dimensions: Optional[int] = None
+)
 ```
 
 **Methods:**
-- `ingest(tools, max_workers=10)` - Build FAISS index (FAISS mode)
-- `query(query, top_k=3)` - Query FAISS index (FAISS mode)
-- `query_pinecone(query, integration_name=None, top_k=3)` - Query Pinecone (async)
-- `ingest_to_pinecone(tools, max_workers=10)` - Index tools to Pinecone (async, one-time)
-- `save(directory)` / `load(directory)` - Persist FAISS index
+
+- `async ingest(tools, integration_name, max_workers=10)` - Enrich and index tools to Pinecone
+- `async query(query, integration_name=None, top_k=3)` - Query tools using semantic search
 
 ## Examples
 
@@ -70,6 +71,6 @@ See `examples/precompute_pinecone_index.py` for complete Pinecone indexing examp
 
 ```bash
 OPENAI_API_KEY=your_key
-PINECONE_API_KEY=your_key      # For Pinecone mode
-PINECONE_INDEX_NAME=your_index # For Pinecone mode
+PINECONE_API_KEY=your_key
+PINECONE_INDEX_NAME=your_index
 ```

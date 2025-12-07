@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tool-hub"
-version = "0.1.7"
-description = "A Hub & Spoke tool selection engine for MCP toolkits with Pinecone support"
+version = "0.1.8"
+description = "A Hub & Spoke tool selection engine for AI agents with Pinecone vector store"
 readme = "README.md"
 authors = [
     { name = "Akshay Sharma", email = "akshay@getseer.dev" }
@@ -13,8 +13,6 @@ authors = [
 requires-python = ">=3.9"
 dependencies = [
     "openai>=2.8.1",
-    "faiss-cpu>=1.13.0",
-    "numpy>=2.3.5",
     "pydantic>=2.12.4",
     "python-dotenv>=1.2.1",
     "tqdm>=4.0.0",
