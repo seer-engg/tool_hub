@@ -1,56 +1,75 @@
 # Tool Hub 🎯
 
-A "Hub & Spoke" tool selection engine for AI agents. It combines semantic search with graph-based expansion to intelligently select the right tools for the job—including dependencies you didn't know you needed.
+A "Hub & Spoke" tool selection engine for AI agents. Combines semantic search with graph-based expansion to intelligently select tools—including dependencies you didn't know you needed.
 
 ## Features
 
-- **🧠 Smart Ingestion**: Enriches tool definitions with "use cases", "dependencies", and "likely neighbors" using GPT-4.
-- **🔍 Hybrid Retrieval**:
-  - **Hub**: Vector search finds the most semantically relevant tools.
-  - **Spoke**: Graph traversal pulls in required dependencies (e.g., `delete_file` automatically pulls `list_files`).
-- **⚡ Fast**: Uses FAISS for high-performance vector similarity search.
+- **🧠 Smart Ingestion**: Enriches tools with LLM-generated metadata (use cases, dependencies, neighbors)
+- **🔍 Hybrid Retrieval**: Vector search (Hub) + graph expansion (Spoke) for complete toolkits
+- **⚡ Fast**: Supports FAISS (local) and Pinecone (cloud) vector stores
+- **☁️ Pinecone Support**: Query existing Pinecone indexes with thousands of pre-computed tools
 
 ## Installation
 
 ```bash
 pip install -e .
+pip install -e ".[dev]"  # For Pinecone support
 ```
 
 ## Quick Start
 
+### FAISS Mode (Local)
+
 ```python
-import os
 from tool_hub import ToolHub
 
-# 1. Initialize
-hub = ToolHub(openai_api_key=os.getenv("OPENAI_API_KEY"))
-
-# 2. Ingest your tools (OpenAI format)
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "create_ticket",
-            "description": "Create a new support ticket",
-            "parameters": {...}
-        }
-    },
-    # ... more tools
-]
-hub.ingest(tools)
-
-# 3. Query
-query = "I need to file a bug report"
-selected_tools = hub.query(query)
-
-print(f"Selected {len(selected_tools)} tools")
+hub = ToolHub(openai_api_key="...", pinecone_index_name="", pinecone_api_key="")
+hub.ingest(tools)  # Your OpenAI-format tools
+results = hub.query("I need to file a bug report")
 ```
 
-## How it Works
+### Pinecone Mode (Production)
 
-1. **Ingest**: The `ingest()` method processes your raw tool definitions. It uses an LLM to "dream up" metadata:
-   - *Use Cases*: specific user intents this tool satisfies.
-   - *Dependencies*: other tools required before this one can run.
-   - *Neighbors*: tools often used in sequence.
+```python
+from tool_hub import ToolHub
 
-2. **Retrieve**: The `query()` method first performs a vector search to find the best "anchor" tools. Then, it looks at the enriched metadata to pull in any "spoke" tools (dependencies and neighbors) to ensure the agent has a complete toolkit.
+hub = ToolHub(
+    openai_api_key=os.getenv("OPENAI_API_KEY"),
+    pinecone_index_name=os.getenv("PINECONE_INDEX_NAME"),
+    pinecone_api_key=os.getenv("PINECONE_API_KEY")
+)
+
+# Query existing index (no ingestion needed)
+results = await hub.query_pinecone(
+    query="list GitHub repositories",
+    integration_name="github",  # Optional filter
+    top_k=5
+)
+```
+
+## API Reference
+
+**Initialization:**
+```python
+ToolHub(openai_api_key, pinecone_index_name, pinecone_api_key, 
+        llm_model="gpt-5-mini", embedding_model="text-embedding-3-small")
+```
+
+**Methods:**
+- `ingest(tools, max_workers=10)` - Build FAISS index (FAISS mode)
+- `query(query, top_k=3)` - Query FAISS index (FAISS mode)
+- `query_pinecone(query, integration_name=None, top_k=3)` - Query Pinecone (async)
+- `ingest_to_pinecone(tools, max_workers=10)` - Index tools to Pinecone (async, one-time)
+- `save(directory)` / `load(directory)` - Persist FAISS index
+
+## Examples
+
+See `examples/precompute_pinecone_index.py` for complete Pinecone indexing example.
+
+## Environment Variables
+
+```bash
+OPENAI_API_KEY=your_key
+PINECONE_API_KEY=your_key      # For Pinecone mode
+PINECONE_INDEX_NAME=your_index # For Pinecone mode
+```

@@ -32,9 +32,8 @@ class EnrichedTool(BaseModel):
     description: str
     parameters: Dict[str, Any]
     use_cases: List[str] = Field(description="Specific user intent questions this tool solves")
-    dependencies: List[str] = Field(description="Other tools that must be run BEFORE this tool")
     likely_neighbors: List[str] = Field(description="Tools likely to be used immediately before or after")
-    required_entities: List[str] = Field(description="Abstract entities required to use this tool")
+    required_params: List[str] = Field(description="Parameter names required to use this tool")
     embedding_text: str = Field(description="Text used for vector embedding")
     original_tool: Tool = Field(description="The original tool object")
     
