@@ -20,7 +20,6 @@ from dotenv import load_dotenv
 from composio import Composio
 from composio_langchain import LangchainProvider
 from tool_hub import ToolHub
-from pinecone import Pinecone, ServerlessSpec
 
 # Load environment variables
 project_root = Path(__file__).parent.parent
@@ -41,44 +40,10 @@ INTEGRATIONS = [
     "GOOGLESHEETS",
     "TELEGRAM",
     "TWITTER",
-    # Add more integrations as needed
-    # "NOTION",
-    # "LINEAR",
-    # "JIRA",
-    # "CONFLUENCE",
-    # etc.
 ]
 
 # Test mode: limit number of tools per integration (set to None to process all)
 TEST_MODE_LIMIT = None  # Set to None for full run (process all tools)
-
-
-def ensure_pinecone_index(pc: Pinecone, index_name: str, dimension: int = 512):
-    """
-    Ensure Pinecone index exists, create if it doesn't.
-    
-    Args:
-        pc: Pinecone client instance
-        index_name: Name of the index
-        dimension: Vector dimension (default: 512 for text-embedding-3-small)
-    """
-    existing_indexes = [idx.name for idx in pc.list_indexes()]
-    
-    if index_name not in existing_indexes:
-        print(f"Creating Pinecone index '{index_name}'...")
-        pc.create_index(
-            name=index_name,
-            dimension=dimension,
-            metric="cosine",
-            spec=ServerlessSpec(
-                cloud="aws",
-                region="us-east-1"  # Change to your preferred region
-            )
-        )
-        print(f"✅ Created index '{index_name}'")
-    else:
-        print(f"✅ Index '{index_name}' already exists")
-
 
 async def precompute_integration(
     integration_name: str,
@@ -163,7 +128,7 @@ async def precompute_integration(
         
         # 3. Enrich and store tools using ToolHub
         print(f"Enriching and storing {len(normalized_tools)} tools in Pinecone...")
-        await toolhub.ingest_to_pinecone(
+        await toolhub.ingest(
             tools=normalized_tools,
             integration_name=integration_name.lower(),
             max_workers=10
@@ -186,16 +151,16 @@ async def main():
     print("="*60)
     
     # Check required environment variables
-    openai_key = os.getenv("OPENAI_API_KEY")
-    pinecone_key = os.getenv("PINECONE_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
     pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
     composio_user_id = os.getenv("COMPOSIO_USER_ID")
     
-    if not openai_key:
+    if not openai_api_key:
         print("❌ Error: OPENAI_API_KEY not set in environment")
         return
     
-    if not pinecone_key:
+    if not pinecone_api_key:
         print("❌ Error: PINECONE_API_KEY not set in environment")
         return
     
@@ -203,11 +168,12 @@ async def main():
     
     # Initialize clients
     print("\nInitializing clients...")
+    # Note: embedding_dimensions must match Pinecone index dimension (512)
     toolhub = ToolHub(
-        openai_api_key=openai_key,
+        openai_api_key=openai_api_key,
         pinecone_index_name=pinecone_index_name,
-        pinecone_api_key=pinecone_key,
-        embedding_dimensions=512  # Match Pinecone index dimension
+        pinecone_api_key=pinecone_api_key,
+        embedding_dimensions=512  # Must match Pinecone index dimension
     )
     
     if composio_api_key:
@@ -215,13 +181,9 @@ async def main():
     else:
         composio_client = Composio(provider=LangchainProvider())
     
-    # Initialize Pinecone and ensure index exists
-    pc = Pinecone(api_key=pinecone_key)
-    ensure_pinecone_index(pc, pinecone_index_name, dimension=512)
-    
     print(f"✅ Clients initialized")
-    print(f"   OpenAI API Key: {'✅ Set' if openai_key else '❌ Missing'}")
-    print(f"   Pinecone API Key: {'✅ Set' if pinecone_key else '❌ Missing'}")
+    print(f"   OpenAI API Key: {'✅ Set' if openai_api_key else '❌ Missing'}")
+    print(f"   Pinecone API Key: {'✅ Set' if pinecone_api_key else '❌ Missing'}")
     print(f"   Pinecone Index: {pinecone_index_name}")
     print(f"   Composio User ID: {composio_user_id}")
     print(f"   Composio API Key: {'✅ Set' if composio_api_key else '⚠️ Not set (may be optional)'}")
