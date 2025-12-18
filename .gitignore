@@ -44,3 +44,4 @@ github_tool_index/
 
 .index/
 **/experiment_results.csv
+_version.py

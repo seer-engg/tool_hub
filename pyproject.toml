@@ -1,25 +1,36 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=80", "wheel", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "tool-hub"
-version = "0.1.9"
+dynamic = ["version"]  # ✅ version comes from git tags (v0.0.1, etc.)
 description = "A Hub & Spoke tool selection engine for AI agents with Pinecone vector store"
 readme = "README.md"
-authors = [
-    { name = "Akshay Sharma", email = "akshay@getseer.dev" }
-]
+authors = [{ name = "Akshay Sharma", email = "akshay@getseer.dev" }]
 requires-python = ">=3.9"
 dependencies = [
-    "openai>=2.8.1",
-    "pydantic>=2.12.4",
-    "python-dotenv>=1.2.1",
-    "tqdm>=4.0.0",
+  "openai>=2.8.1",
+  "pydantic>=2.12.4",
+  "python-dotenv>=1.2.1",
+  "tqdm>=4.0.0",
 ]
 
 [tool.setuptools]
 packages = ["tool_hub"]
+
+# optional but recommended: creates tool_hub/_version.py at build time
+[tool.setuptools_scm]
+version_file = "tool_hub/_version.py"
+tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+.*)$"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+
 
 [project.optional-dependencies]
 dev = [
@@ -31,8 +42,8 @@ dev = [
     "composio-langchain==0.9.4",
     "pinecone<8.0.0",
     "langchain-pinecone>=0.2.13",
+    "setuptools-scm>=8"
 ]
-
 [project.urls]
 Homepage = "https://github.com/seer-engg/tool-hub"
 Documentation = "https://github.com/seer-engg/tool-hub#readme"
