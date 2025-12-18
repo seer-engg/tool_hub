@@ -3,7 +3,7 @@ requires = ["setuptools>=80", "wheel", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tool-hub"
+name = "seer-tool-hub"
 dynamic = ["version"]  # ✅ version comes from git tags (v0.0.1, etc.)
 description = "A Hub & Spoke tool selection engine for AI agents with Pinecone vector store"
 readme = "README.md"
